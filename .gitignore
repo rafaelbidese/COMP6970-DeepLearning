@@ -103,9 +103,14 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# shit
+# mac stuff
 *.DS_Store
 .idea/
+
+# vscode
+
+.vscode/
+
 
 # data
 cs231n/assignment1/datasets
