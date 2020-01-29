@@ -77,10 +77,11 @@ class KNearestNeighbor(object):
                 #####################################################################
                 # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
                 
-                def norm(x,n):
-                    return np.sum(np.abs(x) ** n) ** (1/n)
+                def norm(x,n,axis=None):
+                    return np.sum(np.abs(x) ** n, axis=axis) ** (1/n)
+                
 
-                dists[i,j] = norm(X[i,:] - self.X_train[j,:],2)
+                dists[i,j] = norm(X[i,:] - self.X_train[j,:], n = 2)
 
                 # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
@@ -103,10 +104,11 @@ class KNearestNeighbor(object):
             # Do not use np.linalg.norm().                                        #
             #######################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-            def norm(x,n):
-                return np.sum(np.abs(x) ** n) ** (1/n)
             
-            dists[i, :] = norm(X[i, :] - self.X_train, 2)
+            def norm(x,n,axis=None):
+                    return np.sum(np.abs(x) ** n, axis=axis) ** (1/n)
+                
+            dists[i, :] = norm(X[i, :] - self.X_train, n = 2, axis=1)
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
@@ -136,8 +138,12 @@ class KNearestNeighbor(object):
         #########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        #  sqrt( sum(X) ** 2 + sum(X_train) ** 2 - 2 X * X_train^T )
 
+        sum_X_2 = np.sum(X ** 2, axis=1).reshape(-1, 1) # make it (num_test,1)
+        sum_X_train_2 = np.sum(self.X_train ** 2, axis=1) # make it (num_train,1)
+        dists = (sum_X_2 + sum_X_train_2 - 2 * X.dot(self.X_train.T)) ** (1/2)
+                
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         return dists
 
@@ -180,7 +186,7 @@ class KNearestNeighbor(object):
             # label.                                                                #
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+            
             closest_labels = self.y_train[closest_y]
             label_count = np.bincount(closest_labels)
             y_pred[i] = np.argmax(label_count)
