@@ -32,8 +32,28 @@ def softmax_loss_naive(W, X, y, reg):
     # regularization!                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    #loss = -(1/N)log(e^f/sum(e^f)) + reg * sum(W^2)
+    num_train = X.shape[0] # N
+    num_classes = W.shape[1] # C
 
-    pass
+    for i in range(num_train):
+      f = X[i].dot(W) # shape (1,C)
+      f -= np.max(f) # stability trick
+      p = np.exp(f) / np.sum(np.exp(f)) # softmax   
+      loss += -np.log(p[y[i]]) # y[i] contains the label, therefore the index
+      
+      # gradient for W
+      # dW = (1/N) if ...
+      for j in range(num_classes):
+        # if i!=j, X_i * p_j
+        # if i=j, X_i * (p_j - 1) -> -X_i + p_j * X_i 
+        dW[:,j] += X[i] * (p[j] - (j == y[i]) )                       
+
+    loss /= num_train
+    dW /= num_train
+
+    loss += reg * np.sum(W * W) #L2 regularization
+    dW += reg * W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -57,8 +77,22 @@ def softmax_loss_vectorized(W, X, y, reg):
     # regularization!                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    num_train = X.shape[0] # N
+    
+    f = X.dot(W)
+    f -= np.max(f, axis=1, keepdims=True)
+    p = np.exp(f) / np.sum(np.exp(f), axis=1, keepdims=True) # softmax
+    loss = np.sum(-np.log(p[np.arange(num_train),y])) # y[i] contains the label, therefore the index
 
-    pass
+    p[np.arange(num_train),y] -= 1
+    
+    dW = X.T.dot(p)
+    
+    loss /= num_train
+    dW /= num_train
+
+    loss += reg * np.sum(W * W) #L2 regularization
+    dW += reg * W    
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
