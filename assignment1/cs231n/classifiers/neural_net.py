@@ -79,8 +79,13 @@ class TwoLayerNet(object):
         # shape (N, C).                                                             #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        # X - fully connected layer - fc1 - ReLU - y_hat1 - fully connected layer - softmax
+        
+        relu = lambda x: np.maximum(0,x)
+        
+        fc1 = X.dot(W1) + b1 # (N,H)
+        y_hat1 = relu(fc1) # (N,H)
+        scores =  y_hat1.dot(W2) + b2 # (N,C)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -97,8 +102,12 @@ class TwoLayerNet(object):
         # classifier loss.                                                          #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+            
+        scores -= np.max(scores, axis=1, keepdims=True)
+        p = np.exp(scores) / np.sum(np.exp(scores), axis=1, keepdims=True) # softmax
+        loss = np.sum(-np.log(p[np.arange(N),y]))
+        loss /= N
+        loss += reg * (np.sum(W1 * W1) + np.sum(W2 * W2)) #L2 regularization
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -111,8 +120,28 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        p[np.arange(N),y] -= 1
+        p /= N
 
+        # second layer
+        dW2 = scores.T.dot(p)
+        dW2 += reg * W2
+
+        db2 = np.sum(scores, axis=0)
+
+        # first layer
+        ## TODO
+        db1 = np.sum(1, axis=0)
+
+        # regularization
+
+        dW1 += reg * W1
+        dW2 += reg * W2
+
+        grads = {'W1':dW1,
+                 'b1':db1, 
+                 'W2':dW2,
+                 'b2':db2}
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
         return loss, grads
