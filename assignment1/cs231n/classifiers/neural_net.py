@@ -119,19 +119,20 @@ class TwoLayerNet(object):
         # grads['W1'] should store the gradient on W1, and be a matrix of same size #
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        # TODO review this - the naming convention is confuse
         p[np.arange(N),y] -= 1
         p /= N
 
         # second layer
-        dW2 = scores.T.dot(p)
+        dW2 = y_hat1.T.dot(p)
         dW2 += reg * W2
-
-        db2 = np.sum(scores, axis=0)
+        db2 = np.sum(p, axis=0)
 
         # first layer
-        ## TODO
-        db1 = np.sum(1, axis=0)
+        dW1 = p.dot(W2.T)
+        dfc1 = dW1 * ( fc1 > 0) # gradient through relu
+        dW1 = X.T.dot(dfc1)
+        db1 = np.sum(dfc1, axis=0)
 
         # regularization
 
@@ -168,7 +169,7 @@ class TwoLayerNet(object):
         - verbose: boolean; if true print progress during optimization.
         """
         num_train = X.shape[0]
-        iterations_per_epoch = max(num_train / batch_size, 1)
+        iterations_per_epoch = np.floor(max(num_train / batch_size, 1))
 
         # Use SGD to optimize the parameters in self.model
         loss_history = []
@@ -185,7 +186,9 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            rand_idx = np.random.choice(num_train, batch_size, replace=False)
+            X_batch = X[rand_idx]
+            y_batch = y[rand_idx]
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -201,7 +204,8 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
+            for param in self.params:
+              self.params[param] -= learning_rate * grads[param]
 
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -247,7 +251,7 @@ class TwoLayerNet(object):
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        y_pred = np.argmax(self.loss(X), axis=1)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
