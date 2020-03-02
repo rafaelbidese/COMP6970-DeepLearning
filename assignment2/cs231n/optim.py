@@ -67,8 +67,12 @@ def sgd_momentum(w, dw, config=None):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    lr = config['learning_rate']
+    m = config['momentum']
 
+    v = m * v - lr * dw
+
+    next_w = w + v
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -104,8 +108,15 @@ def rmsprop(w, dw, config=None):
     # config['cache'].                                                        #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    epsilon = config['epsilon']
+    lr = config['learning_rate']
+    decay_rate = config['decay_rate']
+    cache = config['cache']
 
-    pass
+    cache = decay_rate * cache + (1 - decay_rate) * (dw**2)
+    config['cache'] = cache
+    
+    next_w = w - lr * dw / (np.sqrt(cache) + epsilon) # avoid division by 0
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -148,8 +159,27 @@ def adam(w, dw, config=None):
     # using it in any calculations.                                           #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    epsilon = config['epsilon']
+    lr = config['learning_rate']
+    beta_1 = config['beta1']
+    beta_2 = config['beta2']
+    m = config['m']
+    v = config['v']
+    t = config['t']
+    
+    t += 1 # modify t before
+    m = m * beta_1 + (1-beta_1) * dw
+    v = v * beta_2 + (1-beta_2) * (dw**2)
 
-    pass
+    config['t'] = t
+    config['m'] = m
+    config['v'] = v
+
+    # bias correct
+    m_b = m/(1-beta_1**t)
+    v_b = v/(1-beta_2**t)
+
+    next_w = w - lr * m_b / (np.sqrt(v_b)+epsilon) # avoid division by 0
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
