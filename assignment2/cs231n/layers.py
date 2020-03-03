@@ -205,9 +205,22 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # might prove to be helpful.                                          #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        mean = x.mean(axis=0)
+        std = x.std(axis=0)
+        var = x.var(axis=0)
+        epsilon = eps
+        # print(mean.size)
+        # print(std.size)
+        # print(var.size)
+        
+        z = (x-mean)/(std+epsilon) # compute the normalization
+        out = gamma * z + beta
 
-        pass
+        
+        running_mean = momentum * running_mean + (1-momentum) * mean
+        running_var = momentum * running_var + (1-momentum) * (std**2)
 
+        cache = (x, mean, std, gamma, z, var, eps)
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -220,8 +233,9 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # Store the result in the out variable.                               #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        epsilon = eps
+        z = (x - running_mean) / np.sqrt(running_var + epsilon)
+        out = gamma * z + beta
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -263,7 +277,30 @@ def batchnorm_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N,D = dout.shape
+    x, mean, std, gamma, z, var, eps = cache
+    var = var + eps
+    std = np.sqrt(var)
+    dbeta = np.sum(dout, axis=0)
+    dgamma = np.sum(dout*z, axis=0)
+
+    #TODO - review this, the error is too large
+
+    dfdz = dout * gamma
+    dudx= 1/N
+    dvdx = 2/N * (x - mean)
+    dzdx = 1/(std)
+    dzdu = -1/(std)
+    dzdv = (-1/2) * (var**-1.5) * (x - mean)
+    dvdu = (-2/N) * np.sum(x-mean, axis=0)
+
+    # df/dx
+    # df/du * du/dx -> df/dx
+    # df/dv * (dv/dx+dv/dx) -> df/dx
+    dx = dfdz*dzdx + \
+      np.sum(dfdz*dzdu,axis=0)* dudx + \
+      np.sum(dfdz*dzdv,axis=0) * (dvdx+dvdu*dudx) 
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -298,7 +335,15 @@ def batchnorm_backward_alt(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N = dout.shape[0]
+    x, mean, std, gamma, z, var, eps = cache
+    var = var + eps
+    
+    dfdz = dout * gamma
+    dx = 1.0/(N * var) * (N*dfdz - np.sum(dfdz,axis=0) - z * np.sum(dfdz * z, axis=0))
+    dbeta = np.sum(dout, axis=0)
+    dgamma = np.sum(dout*z, axis=0)
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -343,9 +388,18 @@ def layernorm_forward(x, gamma, beta, ln_param):
     # the batch norm code and leave it almost unchanged?                      #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    x = x.T
+    gamma = gamma.reshape(-1,1)
+    beta = beta.reshape(-1,1)
+    mean = x.mean(axis=0)
+    std = x.std(axis=0)
+    var = x.var(axis=0)
+    epsilon = eps
 
-    pass
-
+    z = (x-mean)/(std+epsilon) # compute the normalization
+    out = gamma * z + beta
+    cache = (x, mean, std, gamma, z, var, eps)
+    out = out.T
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -378,8 +432,21 @@ def layernorm_backward(dout, cache):
     # still apply!                                                            #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    dout = dout.T
+    x, mean, std, gamma, z, var, eps = cache
+    dbeta = dout.sum(axis=1)
+    dgamma = np.sum(dout * z, axis=1)
 
-    pass
+
+    N = dout.shape[0]
+
+    
+    dfdz = dout * gamma                                                      
+    dx = (dfdz - np.sum(dfdz,axis=0)/N - np.sum(dfdz * z,axis=0) * z/N)/std   
+
+
+    dx = dx.T
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -427,8 +494,10 @@ def dropout_forward(x, dropout_param):
         # Store the dropout mask in the mask variable.                        #
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        mask_size0 = x.shape[0]
+        mask_size1 = x.shape[1]
+        mask = (np.random.rand(mask_size0, mask_size1)<p) / p
+        out = x * mask
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -440,7 +509,7 @@ def dropout_forward(x, dropout_param):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        out = x 
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
@@ -471,7 +540,7 @@ def dropout_backward(dout, cache):
         #######################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        dx = dout * mask
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         #######################################################################
