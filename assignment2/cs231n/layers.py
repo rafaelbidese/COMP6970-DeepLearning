@@ -586,8 +586,33 @@ def conv_forward_naive(x, w, b, conv_param):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    pad = conv_param['pad']
+    stride = conv_param['stride']
 
+    N,C,H,W = x.shape
+    F,C,HH,WW = w.shape
+
+    
+    boundH = int(1 + (H-HH +2*pad) / stride)
+    boundW = int(1 + (W-WW +2*pad) / stride)
+    
+    x_pad = np.pad(x, ((0,0), (0,0), (pad,pad), (pad,pad)), mode='constant')
+    pad_H = x_pad.shape[2]
+    pad_W = x_pad.shape[3]
+    out = np.zeros((N, F, boundH, boundW)) 
+    w_row = w.reshape(F, C*HH*WW)  
+    x_col = np.zeros((C*HH*WW, boundH*boundW))
+    for n in range(N):
+        neuron = 0
+        for i in range(0, pad_H-HH+1, stride):
+
+            for j in range(0, pad_W-WW+1, stride):
+                x_col[:, neuron] = x_pad[n, :, i:i+HH, j:j+WW].reshape(C*HH*WW)
+                neuron +=1
+        
+        out[n] = (w_row.dot(x_col) + b.reshape(F,1)).reshape(F, boundH, boundW)
+    
+    
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -615,7 +640,6 @@ def conv_backward_naive(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
