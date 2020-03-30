@@ -113,6 +113,6 @@ venv.bak/
 
 
 # data
-cs231n/assignment1/datasets
-cs231n/assignment2/datasets
-cs231n/assignment3/datasets
+cs231n/assignment1/datasets/
+cs231n/assignment2/datasets/
+cs231n/assignment3/datasets/
